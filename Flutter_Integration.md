@@ -143,7 +143,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
       if let window = window,
       let controller = _window.rootViewController as? FlutterViewController {
-      ReffluttersdkPlugin().initWithSDK("<app_id>")
+      ReffluttersdkPlugin().initWithSDK(appId:"<app_id>")
    } 
  }
 ```
