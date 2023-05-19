@@ -134,7 +134,7 @@ Perform the steps listed to set up the native iOS code
 - Initialize the SDK.
 
 ```swift
-RefluttersdkPlugin().initWithSDK("<app_id>")
+RefluttersdkPlugin().initWithSDK(appId:"<app_id>")
 ```
 **Sample - ForiOS ver.13 and above**
 
