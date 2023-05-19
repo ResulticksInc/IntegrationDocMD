@@ -155,7 +155,7 @@ Use the ‘setNotificationAction’ method to get the “Notification open” (U
 
 ```swift
 public funcuserNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandlercompletionHandler: @escaping () -> Void) {
-  RefluttersdkPlugin.didReceive(response)
+   RefluttersdkPlugin.didReceive(response: response)
 }
 ```
 
@@ -166,7 +166,7 @@ Use the method to send silent notification data for In-app notification
 ```swift
 func application(_ application: UIApplication, didReceiveRemoteNotificationuserInfo: [AnyHashable : Any], fetchCompletionHandlercompletionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
     if let _userInfo = userInfo as? [String: Any] {
-      RefluttersdkPlugin.didReceiveRemoteNotification(userInfo)
+      RefluttersdkPlugin.didReceiveRemoteNotification(userInfo: _userInfo)
       completionHandler(.newData) }
     }
 }
@@ -178,7 +178,7 @@ Use the ‘setForegroundNotification’ method to get a notification message in 
 
 ```swift
 public func userNotificationCenter(_center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandlercompletionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-    RefluttersdkPlugin.willPresent(notification) { options in
+    RefluttersdkPlugin.setForegroundNotification(notification) { options in
     completionHandler(options) 
     }
 }
@@ -212,7 +212,7 @@ Example: Using ‘AppDelegate’ method below iOS ver.13:
 
 ```swift
 func application(_app: UIApplication, open url:URL,options:[UIApplicationOpenURLOptionsKey: Any]) -> Bool {
-    RefluttersdkPlugin.open(url)
+    RefluttersdkPlugin.open(url: url)
     return true 
    }
 ```
@@ -226,9 +226,11 @@ func application(_ application: UIApplication, willContinueUserActivityWithType 
 }
 func application(_ application: UIApplication, continue userActivity:NSUserActivity, restorationHandler: @escaping ([Any]?) ->Void) ->Bool {
          //Dynamic Link
-      RefluttersdkPlugin.handleDynamicLink(with: userActivity) { data in
-      } 
-      failureHandler: { err in }
+      RefluttersdkPlugin.handleDynamicLink(userActivity: userActivity) { returnData in
+            
+        } failureHandler: { error in
+            
+        }
       return false
      
 }
@@ -239,14 +241,16 @@ Example: Using the **‘SceneDelegate’** method for iOS ver.13 and above
 ```swift
 func scene(_scene: UIScene, openURLContextsURLContexts:Set<UIOpenURLContext>) { 
     if let url = URLContexts.first?.url {
-       RefluttersdkPlugin.open(url)
+       RefluttersdkPlugin.open(url: url)
     } 
 }
 func scene(_ scene: UIScene, continue userActivity: NSUserActivity) { 
     //Dynamic Link
-    RefluttersdkPlugin.handleDynamicLink(with: userActivity) {data in } 
-    failureHandler: {err in
-    }
+   RefluttersdkPlugin.handleDynamicLink(userActivity: userActivity) { returnData in
+            
+        } failureHandler: { error in
+            
+        }
 }
 ```
 
