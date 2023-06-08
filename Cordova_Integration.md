@@ -38,18 +38,6 @@ repositories {
 }
 ```
 
-- Create an application class as mentioned below:
-
-```ruby
-import android.app.Application
-import com.resul.refluttersdk.RefluttersdkPlugin
-class ProjectApplication: Application() { 
-      override fun onCreate() {
-      super.onCreate()
-      RefluttersdkPlugin().initReSdk(this)
-    } 
-}
-```
 
 - Paste the authorization token (authToken) in the ‘gradle.properties’ file.
 
@@ -105,6 +93,117 @@ android:name="resulticks.key"
 android:value="api_key_<App Id>" />
 </application>
 ```
+
+## Initializing with the SDK
+
+Initialize Cordova plugin SDK using the ‘ReAndroidSDK.getInstance’ method.
+
+Add the following line of code in the project application class file:
+
+```ruby
+import io.mob.resu.reandroidsdk.ReAndroidSDK
+```
+Example
+
+```ruby
+import io.mob.resu.reandroidsdk.ReAndroidSDK;
+public class ProjectApplication extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+ReAndroidSDK.getInstance(this);
+}
+}
+```
+Based on the above code snippet, the method checks the class ‘ProjectApplication.’ The method enables the class in the manifest file if the expected value is available.
+
+Ensure the application class file is mentioned in the AndroidManifest.xml.
+
+## iOS Setup
+
+Perform the steps listed to setup the iOS native code:
+
+- SDK is initialized using the ‘initWithApiWithApiKey’ method.
+- The parameters ‘APIKey’, and ‘category’ initializes the SDK.
+- Register the notification category; initialize the SDK method or pass the parameter as nil.
+- Add the following line of code in the project ‘AppDelegate.m’ class file 
+
+```ruby
+#import <REIOSSDK/REIOSSDK.h>
+```
+
+Example
+
+```ruby
+#import <REIOSSDK/REIOSSDK.h>
+- (BOOL)application:(UIApplication*)application
+didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+    [REiosHandler initWithApiWithApiKey:@"<APP ID>" registerNotificationCategory: nil];
+    self.viewController = [[MainViewController alloc] init]; return [super application:application
+    didFinishLaunchingWithOptions:launchOptions]; 
+}
+```
+
+### Deep linking
+
+Example: Open link
+
+```ruby
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+[REiosHandler handleOpenlinkWithUrl:url successHandler:^(NSString * result) { NSLog(@"%@",result);
+} failureHandler:^(NSString * error) { NSLog(@"Error %@",error);
+ }];
+return YES;
+}
+```
+
+Example: Universal link
+
+```ruby
+- (BOOL)application:(UIApplication *)application
+willContinueUserActivityWithType:(NSString *)userActivityType {
+if ([userActivityType isEqualToString: NSUserActivityTypeBrowsingWeb]) {
+return YES;
+}
+return NO;
+}
+```
+
+```ruby
+- (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
+[REiosHandler handleUniversalLinkWithUserActivity:userActivity successHandler:^(NSString * data) {
+NSLog(@"Received dynamic link data: %@", data); } failureHandler:^(NSString * error) {
+NSLog(@"Received dynamic link error: %@", error);
+}];
+  return NO;
+}
+```
+
+### Dynamic link
+
+Example: Dynamic link – Launching the app via dynamic link (Regular app launch)
+
+```ruby
+- (BOOL)application:(UIApplication *)application willContinueUserActivityWithType:(NSString *)userActivityType {
+if ([userActivityType isEqualToString: NSUserActivityTypeBrowsingWeb]) { return YES;
+}
+return NO;
+}
+- (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void
+(^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
+[REiosHandler handleDynamicLinkWithUserActivity:userActivity successHandler:^(NSString * data) {
+NSLog(@"Received dynamic link data: %@", data);
+} failureHandler:^(NSString * error) {
+NSLog(@"Received dynamic link error: %@", error); }];
+return NO; }
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options{ [REiosHandler handleOpenlinkWithUrl:url successHandler:^(NSString * result) { NSLog(@"%@",result);
+} failureHandler:^(NSString * error) {
+NSLog(@"Error %@",error);
+}];
+return YES;
+}
+```
+
 
 
 
