@@ -1,15 +1,42 @@
-# Flutter Integration document
+# Cordova Integration document
 
-## Install the flutter plugin
+## Support and compatibility
+
+**For Android** - Resulticks provides lower version support up to Android v5.0 and above.
+
+**For iOS** - Resulticks provides support up to iOS 11 and above, Swift 5 and above.
+
+- iOS 11 and above
+- Swift 5 and above
+- Objective C – Native not supported
+- Device support - iPhoneXR and above
+
+## Install the Cordova plugin
 
 - Add the plugin via the terminal using the following syntax
 
 ```ruby
-flutter pub add refluttersdk
+npm install recordovaplugin
+cordova plugin add recordovaplugin
 ```
-## Flutter native android setup
+## Android setup
 
-The section details information on initializing the SDK.
+The section details information on install the SDK.
+
+- Copy the highlighted code snippet and place it in the ‘build.gradle.’
+
+```ruby
+allprojects {
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url "https://jitpack.io"
+        credentials {username authTokenResulticks} 
+    }
+ }
+}
+```
 
 - Create an application class as mentioned below:
 
@@ -24,78 +51,19 @@ class ProjectApplication: Application() {
 }
 ```
 
->Note Add the **‘ProjectApplication’** class to the AndroidMainfest.xml file.
-
-### Notification message delivery
-- Create anFCM project to proceed with the link given herewith - https://firebase.google.com/docs/cloud-messaging/android/client.
-- Add Firebase dependencies in the **‘app/build.gradle.’**
+- Paste the authorization token (authToken) in the ‘gradle.properties’ file.
 
 ```ruby
-implementation 'com.google.firebase:firebase-messaging:20.1.0' 
-apply plugin: 'com.google.gms.google-services'
+authTokenResulticks=jp_t64lhdikii55a25s8df7s33hf6
 ```
-- Add Firebase dependencies in the **‘root/build.gradle.’**
+
+- Copy the highlighted code snippet and place it in the ‘app/build.gradle’ file.
 
 ```ruby
-classpath 'com.google.gms:google-services:4.3.3'
+implementation 'io.resu:ReAndroidSDK_<Client ID>:-SNAPSHOT'
 ```
-- Create a new FCM Receiver class extension with **‘FirebaseMessagingService’** and override the **‘onMessageReceived’** method in the class.
-
-```ruby
-  import com.resul.refluttersdk.RefluttersdkPlugin 
-  class MessagingService:FirebaseMessagingService () {
-      override fun onMessageReceived(remoteMessage: RemoteMessage) { 
-      super.onMessageReceived(remoteMessage)
-      if(RefluttersdkPlugin().onReceivedCampaign(remoteMessage,this)) {
-          return; 
-       }
-     }
-  }
-```
-- Create the **‘FCM Receiver’** class and connect to the **Androidmainfeast.xml**file.
-```ruby
-<!--The receiver receives FCM notification --> 
-<service
-android:name="<Firebase receiver class>"
-android:exported="false" android:directBootAware="true">
-Copyright © RESULTICKS Solution Inc 4
-<intent-filter>
-<action android:name="com.google.firebase.MESSAGING_EVENT"/>
-   </intent-filter>
-</service>
-```
-The **‘onMessageReceived’** method handles the presentation of Resulticks notifications, the In-app notifications, and the activity level screen navigation. Pass through the custom parameters and the fragment name through the activity bundle intent.
-
-- **In-App notifications - FlutterActivity change to FlutterFragmentActivity**
-
-```ruby
-import io.flutter.embedding.android.FlutterFragmentActivity
-class MainActivity : FlutterFragmentActivity()
-```
-
-### Deeplinking/Deferreddeeplinking
-
-For the mobile app, deep linking consists of using a uniform resource identifier (URI) that links to a specific location within a mobile app rather than launching the app.
-
-- Paste the deep linking **AndroidManifest.xml** inside the intentfilter. Refer to an example given below
-
-```ruby
-<intent-filter android:autoVerify="true">
-<action android:name="android.intent.action.VIEW" /> 
-<category android:name="android.intent.category.DEFAULT" /> 
-<category android:name="android.intent.category.BROWSABLE" />
-<data
-android:host="<host>" android:scheme="<scheme>"/>
-</intent-filter>
-```
-
-### Appconfiguration
-
-The app configuration relates to a set of configuration settings applicable for an application/app to work well as per the functions.
-
-Perform the listed steps for configuring the app
-
-- Paste the metadata **AndroidManifest.xml** inside the application tag.
+- Inthe‘AndroidManifest.xml’,changetheiconsorcreatetheicons.Iftheexistingiconsarenotavailable,
+create new icons using the method.
 
 ```ruby
 <?xml version="1.0" encoding="utf-8"?>
@@ -106,6 +74,18 @@ Perform the listed steps for configuring the app
     android:icon="@mipmap/ic_launcher" 
     android:label="@string/app_name" 
     android:theme="@style/AppTheme">
+    
+    <!-- launcher activity class-->
+<activity
+android:name="<Brand’s launcher activity>"
+android:screenOrientation="portrait"
+android:theme="@style/AppTheme.NoActionBar"> <!-- Deep link setup-->
+<data
+android:host="<host>"
+android:scheme="<urlscheme>" />
+</intent-filter>
+      </activity>
+
  
  <!-- Set customized notification icon -->
 <meta-data android:name="resulticks.default_notification_icon"
@@ -125,6 +105,8 @@ android:name="resulticks.key"
 android:value="api_key_<App Id>" />
 </application>
 ```
+
+
 
 ## iOS – Native code setup
 
