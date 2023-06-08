@@ -150,8 +150,11 @@ Example: Open link
 
 ```ruby
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-[REiosHandler handleOpenlinkWithUrl:url successHandler:^(NSString * result) { NSLog(@"%@",result);
-} failureHandler:^(NSString * error) { NSLog(@"Error %@",error);
+[REiosHandler handleOpenlinkWithUrl:url successHandler:^(NSString * result) { 
+    NSLog(@"%@",result);
+} 
+failureHandler:^(NSString * error) { 
+    NSLog(@"Error %@",error);
  }];
 return YES;
 }
@@ -162,18 +165,19 @@ Example: Universal link
 ```ruby
 - (BOOL)application:(UIApplication *)application
 willContinueUserActivityWithType:(NSString *)userActivityType {
-if ([userActivityType isEqualToString: NSUserActivityTypeBrowsingWeb]) {
-return YES;
-}
-return NO;
+    if ([userActivityType isEqualToString: NSUserActivityTypeBrowsingWeb]) {
+           return YES;
+     }
+    return NO;
 }
 ```
 
 ```ruby
 - (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
 [REiosHandler handleUniversalLinkWithUserActivity:userActivity successHandler:^(NSString * data) {
-NSLog(@"Received dynamic link data: %@", data); } failureHandler:^(NSString * error) {
-NSLog(@"Received dynamic link error: %@", error);
+            NSLog(@"Received dynamic link data: %@", data); } 
+    failureHandler:^(NSString * error) {
+            NSLog(@"Received dynamic link error: %@", error);
 }];
   return NO;
 }
@@ -185,24 +189,345 @@ Example: Dynamic link – Launching the app via dynamic link (Regular app launch
 
 ```ruby
 - (BOOL)application:(UIApplication *)application willContinueUserActivityWithType:(NSString *)userActivityType {
-if ([userActivityType isEqualToString: NSUserActivityTypeBrowsingWeb]) { return YES;
+if ([userActivityType isEqualToString: NSUserActivityTypeBrowsingWeb]) { 
+    return YES;
 }
 return NO;
 }
 - (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void
 (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
 [REiosHandler handleDynamicLinkWithUserActivity:userActivity successHandler:^(NSString * data) {
-NSLog(@"Received dynamic link data: %@", data);
+        NSLog(@"Received dynamic link data: %@", data);
 } failureHandler:^(NSString * error) {
-NSLog(@"Received dynamic link error: %@", error); }];
-return NO; }
-- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options{ [REiosHandler handleOpenlinkWithUrl:url successHandler:^(NSString * result) { NSLog(@"%@",result);
+        NSLog(@"Received dynamic link error: %@", error); 
+   }];
+return NO; 
+}
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options{ 
+[REiosHandler handleOpenlinkWithUrl:url successHandler:^(NSString * result) {
+      NSLog(@"%@",result);
 } failureHandler:^(NSString * error) {
 NSLog(@"Error %@",error);
 }];
 return YES;
 }
 ```
+
+### Method - getSmartLink, Notification open data
+
+Use the getSmartlink,Notification open data method to get the notifications.
+
+ - Implement the ‘notificationDelegate’ and ‘SmartLinkDelegate’ methods in AppDelegate.m file.
+
+```ruby
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+    REiosHandler.notificationDelegate = self; 
+    REiosHandler.smartLinkDelegate = self;
+}
+```
+
+- Add the ‘AppDelegate.m’ file in the below method.
+
+```swift
+- (void)didReceiveSmartLinkWithData:(NSDictionary<NSString *, id> * _Nonnull)data{ [self sendJSEvent:data];
+}
+- (void)didReceiveResponseWithData:(NSDictionary<NSString *, id>*)data {
+     [self sendJSEvent:data];
+ }
+ ```
+ 
+ ```swift
+ -(void)sendJSEvent:(NSDictionary *)json {
+NSData *compactJson = [NSJSONSerialization dataWithJSONObject:json options:0
+error:nil];
+NSString *jsonString = [[NSString alloc] initWithData:compactJson
+encoding:NSASCIIStringEncoding];
+NSString *myFunction = @"resulticksReceivedData";
+NSString * notifyJS = [NSString stringWithFormat:@"%@('%@');", myFunction, jsonString];
+if ([[UIApplication sharedApplication]applicationState] ==
+UIApplicationStateActive){
+    [(UIWebView *)self.viewController.webView stringByEvaluatingJavaScriptFromString:notifyJS]; }
+ else{
+    [self.viewController.webView performSelectorOnMainThread:@selector(stringByEvaluatingJavaScriptFromString:) withObject:notifyJS     waitUntilDone:NO];
+} 
+}
+```
+
+- Receive the event in Cordova.
+
+```ruby
+function resulticksReceivedData (value) {
+//add further addition at the code base//
+}
+```
+## Notification delivery
+
+A push notification is a message that pops up on a mobile using Resulticks SDK based message.
+
+### Android notification setup
+
+Paste the FCM or GCM push notification receiver class inside the ‘onMessageReceived’ method.
+
+```java
+FirebaseMessagingServices.java class 
+@Override
+public void onMessageReceived(RemoteMessage remoteMessage){
+    if(ReAndroidSDK.getInstance(this).onReceivedCampaign(remoteMessage.getData())) return;
+}
+```
+
+### Android notification tab listener 
+
+Consider using the FCM to handle the SDK notification tab listener.
+
+```ruby
+//Foreground Notification cordova.plugins.firebase.messaging.onMessage(function (payload) { 
+}
+```
+```ruby
+//Background Notification//
+cordova.plugins.firebase.messaging.onBackgroundMessage(function (payload) { 
+}
+```
+
+### Android smartlink click listener
+
+Consider using the ‘smartlink click listener’ to activate link from a notification from Mobile App.
+
+```ruby
+function ResulticksDeeplinkData(data) { 
+}```
+
+### iOS notification delivery setup – Method setNotificationWithResponse
+
+Use the ‘setNotificationActionWithResponse’ method to get the “Notification open” (User engagement) and call to action (CTA) of the respective buttons from the notification.
+
+Example:
+
+```ruby
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response
+withCompletionHandler:(void (^)())completionHandler {
+{
+[REiosHandler setNotificationActionWithResponse:response]; 
+}
+```
+
+Method - setForegroundNotificationWithData – Use the method to get a notification in the foreground and In-app notifications and pass the notification data through the method.
+
+```ruby
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification
+withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler { 
+        [REiosHandler setForegroundNotificationWithData:notification completionHandler:^(UNNotificationPresentationOptions options) {
+                NSLog(@"options %lu", (unsigned long)options); 
+                completionHandler(options);
+        }]; 
+}
+```
+
+**Method – setCustomNotification**
+
+Use the ‘setCustomNotification’ method to set the mandatory function to get alert/In-app notification message or any other Resulticks notification.
+
+```ruby
+(void)application:(UIApplication *)application
+didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+    [REiosHandler setCustomNotificationWithUserInfo:userInfo]; 
+}
+```
+
+## Code setup for Cordova
+
+### Method – userRegister
+
+Use the method for SDK user registration. In the JavaScript file related to the login function, paste the ‘userRegister’ method and call the method after the user login is successful. Refer to an example given below:
+
+```ruby
+var resUser = {
+uniqueId:’’, // Mandatory // name:’’,
+age: ‘’,
+email:’’,
+    phone:’’,
+    gender:’’,
+token:’’, //Mandatory// profileUrl: '',
+dob: "",
+    education: "",
+employed: true,
+married: true,
+dynamicLink: ["applinks": "dynamic link host",
+"storeId":"Appstore app id"], universalLink: "<universal link host>"
+}
+ReCordovaPlugin.userRegister(resUser);
+```
+
+**Note**: In case while considering for deep linking, add the ‘dynamicLink’ or ‘universalLink’ key to iOS. Enable the following parameters at the code level: ‘uniqueId’, ‘token’.
+
+
+**Method - customEvent**
+
+Use the ‘customEvent’ method to enable custom event tracking.
+
+```ruby
+var resEvent1 = {eventName: 'App Opened'} 
+ReCordovaPlugin.customEvent(resEvent1); 
+var resEvent2 = {
+            eventName: 'Product Purchased',
+            data: {
+                    productId: 'P234234',
+                    productName: 'Mobile Phone'
+              }
+}
+ReCordovaPlugin.customEvent(resEvent2);
+```
+##Method – screenNavigation (Screen tracking)
+
+Use the ‘screenNavigation’ method to track user screen navigation in the app.
+
+```ruby
+var app = {
+    // Application constructor
+initialize: function() {
+document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);},
+onDeviceReady: function() {
+} };
+onUserNavigation();
+app.initialize();
+function onUserNavigation() {
+var userJourney = {
+screenName: window.location.href
+}
+ReCordovaPlugin.screenNavigation(userJourney); 
+}
+```
+
+## Method - locationUpdate
+
+Use the ‘locationUpdate’ method for updating the user location details.
+
+```ruby
+var location = {
+latitude: 13.067439,
+    longitude: 80.237617
+}
+ReCordovaPlugin.locationUpdate(location);
+```
+
+##  Method - handleQrLink (Get QR code data)
+
+Use the ‘handleQrLink’ method to send smart link data and to receive the screen details.
+
+```ruby
+var param = {
+    qrlink:<qrlink>
+}
+ReCordovaPlugin.handleQrLink(param,function success(count) {
+// do your work
+ },function error(error) {
+    //do your work
+})
+```
+
+## Method - getNotification
+
+Use the ‘getNotification’ method to get the recent campaign notifications list. The maximum notification list limit is 50.
+
+```ruby
+function getReNotification() {
+    ReCordovaPlugin.getNotification("getNotification",function(args) {
+    } 
+}
+```
+
+sourceType: 1. Web URL, 2. Video/Audio, 3. Gif, 4. Image 
+pushType: 1. Alert/Rich, 2. In-app, 3. Inbox
+bannerStyle: 1. Full screen, 2. Middle, 3. Top, 4. Bottom
+
+
+## Method - deleteNotification
+
+Use the ‘deleteNotification’ method to delete the selected notification.
+
+There are three methods available to delete notifications. Refer to the notification list data format.
+
+**Method 1 - deleteNotification**
+
+The selected notification object must be passed in the ‘deleteNotification’ method to delete the notification message.
+
+```ruby
+function deleteReNotification(position) {
+    ReCordovaPlugin.deleteNotification(notificationval[position])
+}
+```
+
+**Method 2 - deleteNotificationByCampaignId**
+
+The selected notification object must be passed in the ‘deleteNotificationByCampaignId’ method to delete notification
+
+```ruby
+function deleteNotificationByCampaignId(campaignId) {
+var deleteObject = {
+campaignId:<selected notification campaignId>
+}
+ReCordovaPlugin. deleteNotificationByCampaignId(deleteObject)
+}
+```
+
+**Method 3 - deleteNotificationByNotificationId**
+
+The selected notification object must be passed in the ‘deleteNotificationByNotificationId’ method to delete the notification message using its unique identifier (Id).
+
+```ruby
+function deleteNotificationByNotificationId(notificationId) {
+    var deleteObject = {
+        notificationId:<selected notification notificationId>
+    }
+    ReCordovaPlugin.deleteNotificationByNotificationId(deleteObject) 
+}
+```
+
+## Method - getUnReadNotificationCount
+
+Use the ‘getUnReadNotificationCount’ method for receiving the unread notification count from Resulticks SDK.
+
+```ruby
+ReCordovaPlugin.getUnReadNotificationCount("unreadCount",function success(count) { // enter the required code lines... //
+});
+```
+
+**Method – getReadNotificationCount**
+
+Use the ‘getReadNotificationCount’ method for receiving the read notification count from Resulticks SDK.
+
+```ruby
+ReCordovaPlugin.getReadNotificationCount("readCount",function success(count) { // enter the required code line //
+});
+```
+
+## Method – readNotification
+
+Use the ‘readNotification’ method to set the notification read status to ‘Yes’.
+
+```ruby
+var param = { notificationId:<notificationId>
+}
+ReCordovaPlugin.readNotification(param,function success(count) {
+  // do your work
+});
+```
+
+**Method – unReadNotification**
+
+Use the ‘unReadNotification’ method to set the notification status to ‘No.’
+
+```ruby
+var param = { notificationId:<notificationId>
+}
+ReCordovaPlugin.unReadNotification (param,function success(count) {
+// enter the code lines here //
+});
+```
+
+
+
 
 
 
